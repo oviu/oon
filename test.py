@@ -1,13 +1,14 @@
 import buffer
-import bindings
+import binding
 from tkinter import *
 
 
-bindings.Globals.window.title("test")
-bindings.Globals.window.configure(background="black")
-buffer.FileBuffer("test", "test", bindings.Globals.window, ("Roboto Mono", 10))
+def main():
+	buffer.FileBuffer("test", "test", ("Roboto Mono", 10))	
+	buffer.root.mainloop()
+
+if __name__ == '__main__':
+	main()
 
 
-
-bindings.Globals.window.mainloop()
 

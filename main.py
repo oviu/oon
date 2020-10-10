@@ -179,7 +179,6 @@ def create_directory_buffer(window, path, buffers):
 	buffers['directory'].append(dir_buffer)
 	return dir_buffer
 
-
 def create_file_buffer(window, path, buffers):
 	file_buffer = Text(window, font = ("Roboto Mono", 11))
 	file_buffer.grid(row = 0, column = 0, sticky = N + S + W + E)
@@ -191,12 +190,6 @@ def create_file_buffer(window, path, buffers):
 	file_buffer.focus_set()
 	file_buffer.lift()
 	buffers['text'].append(file_buffer)
-
-def hide_buffers(window):
-	for i in range(1, len(buffers)):
-		buffers[i].grid_remove()
-
-
 
 window.grid_columnconfigure(0, weight=1)
 window.grid_rowconfigure(0, weight=1)

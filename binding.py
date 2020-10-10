@@ -1,25 +1,21 @@
 from tkinter import *
 
-class Globals:
-	window = Tk()
-	edit_mode = BooleanVar()
-	edit_mode.set(False)
 
-def toggle_modal(event):
-	if Globals.edit_mode.get() == True:
+def toggle_modal(event, isedit):
+	if isedit.get() == True:
 		event.widget.config(blockcursor=False)
-		Globals.edit_mode.set(False)
+		isedit.set(False)
 		event.widget.tag_remove("mchar", "1.0", "end") #last
 	else:
-		Globals.edit_mode.set(True)
+		isedit.set(True)
 		event.widget.tag_add("mchar", "insert", "insert+1c") 
 		event.widget.tag_config("mchar", foreground="white")
 		event.widget.config(blockcursor=True)
 	return "break"
 
 
-def edit_mode(event):
-	if Globals.edit_mode.get() == True:
+def edit_mode(event, isedit):
+	if isedit.get() == True:
 		pass
 	else:
 		return
@@ -86,10 +82,10 @@ def edit_mode(event):
 		event.widget.tag_remove("mchar", "1.0", "end")
 		event.widget.mark_set("insert", "current lineend")
 		return "break"
-	elif event.keysym == 'a':
-		cl_active.set(True)
+#	elif event.keysym == 'a':
+		#cl_active.set(True)
 
 	if event.keysym == 'f':
-		toggle_modal(event)
+		toggle_modal(event, isedit)
 		return "break"
 	return "break"
