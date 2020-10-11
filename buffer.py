@@ -1,5 +1,6 @@
 import tkinter as tk
 import binding
+import config
 
 buffers = {'files': [], 'directories' : []}
 root = tk.Tk()
@@ -16,6 +17,7 @@ class FileBuffer(tk.Text):
 		self.bind('<Shift-space>', lambda event: binding.toggle_modal(event, self.isedit))
 		self.bind('<KeyPress>', lambda event: binding.edit_mode(event,self.isedit))
 		self.bind('<KeyRelease>', lambda event: self.get_rowcol(event))
+
 
 		self.statusline = Statusline(("Roboto Mono", 10))
 		self.isedit = tk.BooleanVar()
@@ -35,8 +37,7 @@ class FileBuffer(tk.Text):
 		self.curr_rowcol.set(self.index("insert"))
 		self.statusline.set_rolcol(self.curr_rowcol.get())
 		return "break"
-		
-		
+
 class DirectoryBuffer(tk.Text):
 	def __init__(self, directory, font):
 		super().__init__(root, font = font)
@@ -89,5 +90,11 @@ class Commandline(tk.Entry):
 		self.cltext = tk.StringVar()
 		super().__init__(root, textvariable = self.cltext)
 		self.grid(row=2, column=0, sticky = "swe")
+
+
+class ConfigBuffer(tk.Frame):
+	def __init__(self):
+		super().__init__(root)
+		self.grid(row=0, column = 0, sticky = "swne")
 
 commandline = Commandline(("Roboto Mono", 10))
