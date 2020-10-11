@@ -11,18 +11,19 @@ class FileBuffer(tk.Text):
 		super().grid(row = 0, column = 0, sticky = 'nswe')
 		super().configure(background = "white", foreground = "black", insertofftime = 0)
 
-		self.isedit = tk.BooleanVar()
-		self.isedit.set("False")
-
 		self.bind('<Shift-space>', lambda event: binding.toggle_modal(event, self.isedit))
 		self.bind('<Key>', lambda event: binding.edit_mode(event,self.isedit))
 
 		self.statusline = Statusline(("Roboto Mono", 10))
+		self.isedit = tk.BooleanVar()
+		
 
 		self.file_name = file_name
 		self.file_path = file_path
 
 		buffers['files'].append(self)
+		self.isedit.trace("w", self.statusline.status_callback)
+		self.isedit.set("False")
 
 class DirectoryBuffer(tk.Text):
 	def __init__(self, directory, font):
@@ -44,8 +45,12 @@ class Statusline(tk.Label):
 		super().__init__(root, textvariable = self.mode_string)
 		super().grid(row=1, column=0, sticky= "swe")
 
-	def status_callback():
-		pass
+	def status_callback(self, *args):
+		if root.getvar(name=args[0]) == True:
+			self.mode_string.set("<EDIT MODE>")
+		else:
+			self.mode_string.set("--INSERT MODE--")
+
 
 
 class Commandline(tk.Entry):
