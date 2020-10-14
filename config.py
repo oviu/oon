@@ -2,7 +2,9 @@ import pickle
 import os
 
 def create_empty_config():
-	return {'left': '', 'up':'', 'right':'', 'down':'', 'end_of_line': ''}
+	return {'movement' : {'left': '', 'up':'', 'right':'', 'down':'', 'end_of_line': ''}, 
+			'directory' : {'default' : ''},
+			'file buffer' : {'colors' : ''}}
 
 def load_config():
 	if os.path.exists("config.pickle"):
