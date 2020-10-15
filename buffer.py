@@ -2,16 +2,20 @@ import tkinter as tk
 import binding
 import config
 import os
+import collections
 
 buffers = {'files': [], 'directories' : [], 'current': None, 'cl': []}
 
 root = tk.Tk()
+root.title("oon")
+root.geometry("1000x1000")
 root.grid_columnconfigure(0, weight=1)
 root.grid_rowconfigure(0, weight=1)
 
 class FileBuffer(tk.Text):
 	BUFFER_TYPE = 'FILE'
 	list = []
+	head = None
 	def __init__(self,file_path, file_name, font):
 		super().__init__(root, font = font)
 		super().grid(row = 0, column = 0, sticky = 'nswe')
@@ -21,7 +25,7 @@ class FileBuffer(tk.Text):
 		self.bind('<KeyPress>', lambda event: binding.edit_mode(event,self.isedit))
 		self.bind('<KeyRelease>', lambda event: self.get_rowcol(event))
 
-		self.statusline = Statusline(("Roboto Mono", 10))
+		self.statusline = Statusline(config.deffont)
 
 		self.isedit = tk.BooleanVar()
 		self.curr_rowcol = tk.StringVar()
@@ -29,7 +33,7 @@ class FileBuffer(tk.Text):
 
 		self.file_name = file_name
 		self.file_path = file_path
-
+		
 		with open(self.file_path, 'r') as f:
 			self.insert("insert", f.read())
 
@@ -40,8 +44,9 @@ class FileBuffer(tk.Text):
 		self.focus_set()
 		self.isedit.trace("w", self.statusline.mode_callback)
 		self.isedit.set("False")
-
+		
 		self.statusline.set_name(self.file_name)
+		self.statusline.set_type("Python")
 		self.list.append(self)
 
 	def get_rowcol(self, *args):
@@ -50,6 +55,16 @@ class FileBuffer(tk.Text):
 		return "break"
 	def get_filetype(self):
 		return self.BUFFER_TYPE
+
+	def set_currentbuffer(self):
+		self.focus_set()
+		self.lift()
+	
+	def change_fontsize(self):
+		pass
+	
+	def get_extension():
+		filename, file_extension
 
 class DirectoryBuffer(tk.Text):
 	BUFFER_TYPE = 'DIRECTORY'
@@ -69,7 +84,7 @@ class DirectoryBuffer(tk.Text):
 			self.insert("end", file)
 
 		self.path = path
-		self.statusline = Statusline(("Roboto Mono", 10))
+		self.statusline = Statusline(config.deffont)
 		self.expanion = []
 		self.path_expansion = path
 		self.mark_set("insert", "1.0")
@@ -86,10 +101,10 @@ class DirectoryBuffer(tk.Text):
 
 class Statusline(tk.Label):
 	def __init__(self, font):
-		self.status = {'mode': "", 'index' : "", 'name': ""}
+		self.status = {'mode': "", 'index' : "", 'name': "", 'type': ""}
 		self.status_string = tk.StringVar()
 		self.status_string.set(f"{self.status['mode']}")
-		super().__init__(root, textvariable = self.status_string, anchor = "w", background = "black", foreground = "white")
+		super().__init__(root, textvariable = self.status_string, anchor = "w", background = "black", foreground = "white", font = font)
 		super().grid(row=1, column=0, sticky= "swe")
 
 	def mode_callback(self, *args):
@@ -106,7 +121,7 @@ class Statusline(tk.Label):
 		self.set_status_string()
 
 	def set_status_string(self):
-		self.status_string.set(f"{self.status['mode']}    {self.status['index']}    {self.status['name']}")
+		self.status_string.set(f"{self.status['mode']}    {self.status['index']}    {self.status['name']} {self.status['type']}")
 
 	def set_rolcol(self, value):
 		self.status['index'] = value
@@ -115,8 +130,10 @@ class Statusline(tk.Label):
 	def set_name(self, value):
 		self.status['name'] = value
 		self.set_status_string()
-
-	#set file_type
+	
+	def set_type(self, value):
+		self.status['type'] = value
+		self.set_status_string()
 
 class Commandline(tk.Entry):
 	def __init__(self, buffers, font):
@@ -134,7 +151,24 @@ class ConfigBuffer(tk.Frame):
 		label = tk.Label(self, text = "CONFIG")
 		label.pack()
 		buffers['current'] = self
-		
+
+class WelcomeBuffer(tk.Frame):
+	list = []
+	def __init__(self):
+		super().__init__(root)
+		self.configure(background = "white")
+		self.grid(row= 0, column = 0, sticky = "swne")
+		self.welcome_label = tk.Label(self, text = "WELCOME")
+		self.config_label = tk.Label(self, text = "CONFIG", bg = "red")
+		self.default_directory_label = tk.Label(self, text = "DEFAULT DIRECTORY")
+		self.bind('<KeyPress>', lambda event: binding.wb_commands(event))
+		self.statusline = Statusline(config.deffont)
+		self.welcome_label.pack()
+		self.config_label.pack()
+		self.default_directory_label.pack()
+		self.lift()
+		self.focus_set()
+		self.list.append(self.config_label)
+		self.list.append(self.default_directory_label)
 
 # commandline = Commandline(buffers['current'],("Roboto Mono", 10))
-	

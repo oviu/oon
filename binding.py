@@ -103,6 +103,34 @@ def beginning_of_line(event):
 	textbox.tag_config("mchar", foreground = "white")
 	textbox.mark_set("insert", "insert linestart")
 
+def newline(event):
+	"""Creates a newline inside a Text widget"""
+	textbox = event.widget
+	textbox.tag_remove("mchar", "1.0", "end")
+	textbox.insert("insert", "\n")
+
+def next_filebuffer(event):
+	"""Goes to the next filebuffer in filebuffer list"""
+	filebuffer = event.widget
+	file_idx = filebuffer.list.index(filebuffer)
+	if file_idx + 1 >= len(filebuffer.list):
+		filebuffer.list[0].set_currentbuffer()
+	else:
+		filebuffer.list[file_idx + 1].set_currentbuffer()
+
+def prev_filebuffer(event):
+	"""Goes to the previous filebuffer in filebuffer list"""
+	filebuffer = event.widget
+	file_idx = filebuffer.list.index(filebuffer)
+	if file_idx - 1 < 0:
+		filebuffer.list[-1].set_currentbuffer()
+	else:
+		filebuffer.list[file_idx - 1].set_currentbuffer()
+
+def create_newfile(event):
+	pass
+
+
 def directory_jump_expand_parent(event):
 	"""jump to current expanded items parent directory"""
 
@@ -131,25 +159,20 @@ def edit_mode(event, isedit):
 	buffer.buffers['cl'][-1].cltext.set("")
 	if isedit.get() == False:
 		return
-	if event.keysym == config.config['movement']['left']:
-		left(event)
-	elif event.keysym == 'u' and config.config['movement']['left'] == '':
+	if event.keysym == config.left:
 		left(event)
 
-	elif event.keysym == config.config['movement']['right']:
+	elif event.keysym == config.right:
 		right(event)
-	elif event.keysym == 'o' and config.config['movement']['right'] == '':
-		right(event)
-	
-	elif event.keysym == config.config['movement']['up']:
+
+	elif event.keysym == config.up:
 		up(event)
-	elif event.keysym == 'i' and config.config['movement']['up'] == '':
-		up(event)
-		
-	elif event.keysym == config.config['movement']['down']:
+
+	elif event.keysym == config.down:
 		down(event)
-	elif event.keysym == 'j' and config.config['movement']['down'] == '':
-		down(event)
+
+	elif event.keysym == 'J':
+		newline(event)
 
 	elif event.keysym == 's':
 		savefile(event)
@@ -172,8 +195,16 @@ def edit_mode(event, isedit):
 
 	elif event.keysym == 'f':
 		toggle_modal(event, isedit) 
+	
+	elif event.keysym == 'q':
+		next_filebuffer(event)
+		
+	elif event.keysym == 'Q':
+		prev_filebuffer(event)
 
-	return "break"
+	elif event.keysym == 'n':
+		create_newfile(event)
+	return "break" 
 
 #open directory mode in parent directory, specified directory, or default directory
 def cl_dir():
@@ -185,29 +216,21 @@ def cl_commands(event, buffers):
 		buffers['files'][-1].focus_set()
 		buffers['files'][-1].lift()
 	if command == 'dir':
-			buffer.DirectoryBuffer("D:\\all",("Roboto Mono", 10))
+			buffer.DirectoryBuffer("D:\\all", config.deffont)
 			buffers['current'].focus_set()
 	event.widget.cltext.set("")
 
 def directory_mode(event):
-	if event.keysym == config.config['movement']['left']:
-		left(event)
-	elif event.keysym == 'u' and config.config['movement']['left'] == '':
+	if event.keysym == config.left:
 		left(event)
 
-	elif event.keysym == config.config['movement']['right']:
+	elif event.keysym == config.right:
 		right(event)
-	elif event.keysym == 'o' and config.config['movement']['right'] == '':
-		right(event)
-	
-	elif event.keysym == config.config['movement']['up']:
+
+	elif event.keysym == config.up:
 		up(event)
-	elif event.keysym == 'i' and config.config['movement']['up'] == '':
-		up(event)
-		
-	elif event.keysym == config.config['movement']['down']:
-		down(event)
-	elif event.keysym == 'j' and config.config['movement']['down'] == '':
+
+	elif event.keysym == config.down:
 		down(event)
 
 	elif event.keysym == 'I':
@@ -216,26 +239,17 @@ def directory_mode(event):
 	elif event.keysym == 'a':
 		event.widget.tag_remove("mchar", "1.0", "end")
 		buffer.buffers['cl'][-1].focus_set()
+
 	return "break"
 
 def directory_enter(event):
 	# path = event.widget.path_expansion
-	# item = event.widget.get("insert linestart", "insert lineend")
-	# if item == "..":
-		# if "\\" in path:
-			# path = path[:path.rindex('\\')]
-	# else:
-		# path = path + "\\" + item.strip()
-	# if "\\" not in path:
-		# path = path + "\\"
-	# print("path expansion: " + path)
 	item = event.widget.get("insert linestart", "insert lineend")
-	tabs = countleadingtabs(item)
-	path = getfilepath(item, tabs, event) #item, tabs, event
+	path = getfilepath(event) #item, tabs, event
 	if os.path.isdir(path):
-		buffer.DirectoryBuffer(path, ("Roboto Mono", 10))
+		buffer.DirectoryBuffer(path, config.deffont)
 	elif os.path.isfile(path):
-		buffer.FileBuffer(path, item, ("Roboto Mono", 10))
+		buffer.FileBuffer(path, item, config.deffont)
 	return "break"
 
 
@@ -257,7 +271,7 @@ def directory_expand(event):
 		else: 
 			break
 		
-	curr_path = getfilepath(item, tabs, event)
+	curr_path = getfilepath(event)
 	event.widget.path_expansion = curr_path
 
 	if os.path.isdir(curr_path):
@@ -266,6 +280,31 @@ def directory_expand(event):
 		tabs = '\t' if tabs == 0 else'\t'*(tabs+1)
 		for file in files:
 			event.widget.insert("insert lineend", f"\n{tabs}{file}")
+	return "break"
+
+def wb_commands(event):
+	welcome_buffer = event.widget
+	if event.keysym == 'j' or event.keysym == 'down':
+		for i in range(len(welcome_buffer.list)):
+			label = welcome_buffer.list[i]
+			if label.cget("bg") == "red":
+				label.configure(background = "white")
+				if i == len(welcome_buffer.list) - 1:
+					welcome_buffer.list[0].configure(background = "red")
+					break
+				else:
+					welcome_buffer.list[i+1].configure(background = "red")
+					break
+	elif event.keysym == 'i' or event.keysym == 'up':
+		for i in range(len(welcome_buffer.list)):
+			label = welcome_buffer.list[i]
+			if label.cget("bg") == "red":
+				label.configure(background = "white")
+				if i == 0:
+					welcome_buffer.list[-1].configure(background = "red")
+					break
+				else:
+					welcome_buffer.list[i-1].configure(background = "red")
 	return "break"
 
 def countleadingtabs(item):
@@ -277,7 +316,9 @@ def countleadingtabs(item):
 			break
 	return tabs
 
-def getfilepath(item, tabs, event):
+def getfilepath(event):
+	item = event.widget.get("insert linestart", "insert lineend")
+	tabs = countleadingtabs(item)
 	list = ["\\" + item.strip()]
 	coords = event.widget.index("insert linestart").split(".")
 	count = 0
@@ -298,7 +339,11 @@ def getfilepath(item, tabs, event):
 	return event.widget.path + "".join(list)
     
 def savefile(event):
-	file = open(event.widget.file_path, 'w')
-	file.write(event.widget.get(1.0, END))
+	fbuffer = event.widget
+	file = open(fbuffer.file_path, 'w')
+	file.write(fbuffer.get(1.0, END))
 	file.close()
 	buffer.buffers['cl'][-1].cltext.set("FILE SAVED")
+
+
+
